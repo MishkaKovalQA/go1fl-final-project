@@ -8,6 +8,7 @@ import (
 func Init() {
 	http.HandleFunc("/api/nextdate", nextDayHandler)
 	http.HandleFunc("/api/task", taskHandler)
+	http.HandleFunc("/api/tasks", tasksHandler)
 }
 
 func writeJSON(w http.ResponseWriter, data any) {
