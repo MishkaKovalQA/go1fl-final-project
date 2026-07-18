@@ -18,7 +18,9 @@ func tasksHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tasks, err := db.Tasks(tasksLimit)
+	search := r.FormValue("search")
+
+	tasks, err := db.Tasks(search, tasksLimit)
 	if err != nil {
 		writeError(w, "Не удалось получить список задач")
 		return

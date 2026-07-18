@@ -1,5 +1,10 @@
 package db
 
+import (
+	"database/sql"
+	"time"
+)
+
 type Task struct {
 	ID      string `json:"id"`
 	Date    string `json:"date"`
@@ -23,14 +28,49 @@ func AddTask(task *Task) (int64, error) {
 	return res.LastInsertId()
 }
 
-func Tasks(limit int) ([]*Task, error) {
-	rows, err := db.Query(
-		`SELECT id, date, title, comment, repeat
-		 FROM scheduler
-		 ORDER BY date
-		 LIMIT ?`,
-		limit,
+func Tasks(search string, limit int) ([]*Task, error) {
+	var (
+		rows *sql.Rows
+		err  error
 	)
+
+	if search == "" {
+		rows, err = db.Query(
+			`SELECT id, date, title, comment, repeat
+			 FROM scheduler
+			 ORDER BY date
+			 LIMIT ?`,
+			limit,
+		)
+	} else {
+		searchDate, parseErr := time.Parse("02.01.2006", search)
+
+		if parseErr == nil {
+			rows, err = db.Query(
+				`SELECT id, date, title, comment, repeat
+				 FROM scheduler
+				 WHERE date = ?
+				 ORDER BY date
+				 LIMIT ?`,
+				searchDate.Format("20060102"),
+				limit,
+			)
+		} else {
+			pattern := "%" + search + "%"
+
+			rows, err = db.Query(
+				`SELECT id, date, title, comment, repeat
+				 FROM scheduler
+				 WHERE title LIKE ? OR comment LIKE ?
+				 ORDER BY date
+				 LIMIT ?`,
+				pattern,
+				pattern,
+				limit,
+			)
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -55,9 +95,5 @@ func Tasks(limit int) ([]*Task, error) {
 		tasks = append(tasks, task)
 	}
 
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return tasks, nil
+	return tasks, rows.Err()
 }
