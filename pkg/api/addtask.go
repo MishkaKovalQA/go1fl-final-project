@@ -21,6 +21,9 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPut:
 		updateTaskHandler(w, r)
 
+	case http.MethodDelete:
+		deleteTaskHandler(w, r)
+
 	default:
 		writeError(w, "Метод не поддерживается")
 	}
@@ -90,4 +93,65 @@ func checkDate(task *db.Task) error {
 
 func afterNow(now, date time.Time) bool {
 	return now.Format(dateFormat) > date.Format(dateFormat)
+}
+
+func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.FormValue("id")
+	if id == "" {
+		writeError(w, "Не указан идентификатор")
+		return
+	}
+
+	if err := db.DeleteTask(id); err != nil {
+		writeError(w, err.Error())
+		return
+	}
+
+	writeJSON(w, map[string]any{})
+}
+
+func doneTaskHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeError(w, "Метод не поддерживается")
+		return
+	}
+
+	id := r.FormValue("id")
+	if id == "" {
+		writeError(w, "Не указан идентификатор")
+		return
+	}
+
+	task, err := db.GetTask(id)
+	if err != nil {
+		writeError(w, "Задача не найдена")
+		return
+	}
+
+	if task.Repeat == "" {
+		if err := db.DeleteTask(id); err != nil {
+			writeError(w, err.Error())
+			return
+		}
+
+		writeJSON(w, map[string]any{})
+		return
+	}
+
+	next, err := NextDate(
+		time.Now(),
+		task.Date,
+		task.Repeat,
+	)
+	if err != nil {
+		writeError(w, err.Error())
+		return
+	}
+
+	if err := db.UpdateDate(next, id); err != nil {
+		writeError(w, err.Error())
+		return
+	}
+
+	writeJSON(w, map[string]any{})
 }
