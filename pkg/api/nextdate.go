@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -15,23 +16,23 @@ const (
 
 func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 	if repeat == "" {
-		return "", errors.New("repeat rule is empty")
+		return "", errors.New("Не указано правило повторения")
 	}
 
 	date, err := time.Parse(dateFormat, dstart)
 	if err != nil {
-		return "", err
+		return "", errors.New("Неверный формат даты")
 	}
 
 	parts := strings.Fields(repeat)
 	if len(parts) == 0 {
-		return "", errors.New("repeat rule is empty")
+		return "", errors.New("Не указано правило повторения")
 	}
 
 	switch parts[0] {
 	case "y":
 		if len(parts) != 1 {
-			return "", errors.New("invalid yearly repeat rule")
+			return "", errors.New("Неверное правило повторения по годам")
 		}
 
 		for {
@@ -44,16 +45,20 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 
 	case "d":
 		if len(parts) != 2 {
-			return "", errors.New("invalid daily repeat rule")
+			return "", errors.New("Неверное правило повторения по дням")
 		}
 
 		days, err := strconv.Atoi(parts[1])
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf(
+				"Некорректный интервал дней %q: %w",
+				parts[1],
+				err,
+			)
 		}
 
 		if days < 1 || days > 400 {
-			return "", errors.New("day interval must be from 1 to 400")
+			return "", errors.New("Интервал дней должен быть от 1 до 400")
 		}
 
 		for {
@@ -66,7 +71,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 
 	case "w":
 		if len(parts) != 2 {
-			return "", errors.New("invalid weekly repeat rule")
+			return "", errors.New("Неверное правило повторения по неделям")
 		}
 
 		weekdays, err := parseInts(parts[1])
@@ -76,7 +81,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 
 		for _, weekday := range weekdays {
 			if weekday < 1 || weekday > 7 {
-				return "", errors.New("weekday must be from 1 to 7")
+				return "", errors.New("День недели должен быть от 1 до 7")
 			}
 		}
 
@@ -97,11 +102,13 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 			date = date.AddDate(0, 0, 1)
 		}
 
-		return "", errors.New("next weekly date not found")
+		return "", errors.New(
+			"Не удалось найти следующую дату по недельному правилу",
+		)
 
 	case "m":
 		if len(parts) < 2 || len(parts) > 3 {
-			return "", errors.New("invalid monthly repeat rule")
+			return "", errors.New("Неверное правило повторения по месяцам")
 		}
 
 		days, err := parseInts(parts[1])
@@ -111,7 +118,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 
 		for _, day := range days {
 			if day < -2 || day == 0 || day > 31 {
-				return "", errors.New("invalid day of month")
+				return "", errors.New("Неверный день месяца")
 			}
 		}
 
@@ -125,7 +132,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 
 			for _, month := range months {
 				if month < 1 || month > 12 {
-					return "", errors.New("month must be from 1 to 12")
+					return "", errors.New("Месяц должен быть от 1 до 12")
 				}
 			}
 		}
@@ -164,10 +171,12 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 			date = date.AddDate(0, 0, 1)
 		}
 
-		return "", errors.New("next monthly date not found")
+		return "", errors.New(
+			"Не удалось найти следующую дату по месячному правилу",
+		)
 
 	default:
-		return "", errors.New("unsupported repeat rule")
+		return "", errors.New("Неподдерживаемое правило повторения")
 	}
 }
 
@@ -178,7 +187,11 @@ func nextDayHandler(w http.ResponseWriter, r *http.Request) {
 	if nowValue != "" {
 		parsedNow, err := time.Parse(dateFormat, nowValue)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(
+				w,
+				"Параметр now должен быть в формате ГГГГММДД",
+				http.StatusBadRequest,
+			)
 			return
 		}
 
@@ -207,7 +220,11 @@ func parseInts(value string) ([]int, error) {
 	for _, field := range fields {
 		num, err := strconv.Atoi(field)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf(
+				"Некорректное число %q: %w",
+				field,
+				err,
+			)
 		}
 
 		nums = append(nums, num)
