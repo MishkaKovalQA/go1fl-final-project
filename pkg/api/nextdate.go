@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -61,4 +62,31 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 	default:
 		return "", errors.New("unsupported repeat rule")
 	}
+}
+
+func nextDayHandler(w http.ResponseWriter, r *http.Request) {
+	now := time.Now()
+
+	nowValue := r.FormValue("now")
+	if nowValue != "" {
+		parsedNow, err := time.Parse(dateFormat, nowValue)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		now = parsedNow
+	} else {
+		now, _ = time.Parse(dateFormat, now.Format(dateFormat))
+	}
+
+	date := r.FormValue("date")
+	repeat := r.FormValue("repeat")
+
+	next, err := NextDate(now, date, repeat)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	_, _ = w.Write([]byte(next))
 }

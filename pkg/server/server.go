@@ -3,6 +3,8 @@ package server
 import (
 	"net/http"
 	"os"
+
+	"go1fl-final-project/pkg/api"
 )
 
 const (
@@ -15,6 +17,8 @@ func Run() error {
 	if port == "" {
 		port = defaultPort
 	}
+
+	api.Init()
 
 	http.Handle("/", http.FileServer(http.Dir(webDir)))
 
