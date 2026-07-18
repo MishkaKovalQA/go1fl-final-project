@@ -5,7 +5,10 @@ import (
 	"os"
 )
 
-const defaultPort = "7540"
+const (
+	defaultPort = "7540"
+	webDir      = "web"
+)
 
 func Run() error {
 	port := os.Getenv("TODO_PORT")
@@ -13,7 +16,7 @@ func Run() error {
 		port = defaultPort
 	}
 
-	http.Handle("/", http.FileServer(http.Dir("web")))
+	http.Handle("/", http.FileServer(http.Dir(webDir)))
 
 	return http.ListenAndServe(":"+port, nil)
 }
