@@ -13,45 +13,6 @@ const (
 	maxScanDays = 2000
 )
 
-func parseInts(s string) ([]int, error) {
-	fields := strings.Split(s, ",")
-	nums := make([]int, 0, len(fields))
-
-	for _, field := range fields {
-		n, err := strconv.Atoi(field)
-		if err != nil {
-			return nil, err
-		}
-
-		nums = append(nums, n)
-	}
-
-	return nums, nil
-}
-
-func contains(nums []int, target int) bool {
-	for _, num := range nums {
-		if num == target {
-			return true
-		}
-	}
-
-	return false
-}
-
-func lastDayOfMonth(date time.Time) int {
-	return time.Date(
-		date.Year(),
-		date.Month()+1,
-		0,
-		0,
-		0,
-		0,
-		0,
-		date.Location(),
-	).Day()
-}
-
 func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 	if repeat == "" {
 		return "", errors.New("repeat rule is empty")
@@ -119,21 +80,21 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 			}
 		}
 
+		if date.Before(now) {
+			date = now
+		}
+
 		for i := 0; i < maxScanDays; i++ {
-			date = date.AddDate(0, 0, 1)
-
-			if !date.After(now) {
-				continue
-			}
-
 			weekday := int(date.Weekday())
 			if weekday == 0 {
 				weekday = 7
 			}
 
-			if contains(weekdays, weekday) {
+			if date.After(now) && contains(weekdays, weekday) {
 				return date.Format(dateFormat), nil
 			}
+
+			date = date.AddDate(0, 0, 1)
 		}
 
 		return "", errors.New("next weekly date not found")
@@ -169,38 +130,38 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 			}
 		}
 
+		if date.Before(now) {
+			date = now
+		}
+
 		for i := 0; i < maxScanDays; i++ {
-			date = date.AddDate(0, 0, 1)
+			if date.After(now) {
+				if len(months) == 0 || contains(months, int(date.Month())) {
+					currentDay := date.Day()
+					lastDay := lastDayOfMonth(date)
 
-			if !date.After(now) {
-				continue
-			}
+					for _, allowedDay := range days {
+						switch allowedDay {
+						case -1:
+							if currentDay == lastDay {
+								return date.Format(dateFormat), nil
+							}
 
-			if len(months) > 0 && !contains(months, int(date.Month())) {
-				continue
-			}
+						case -2:
+							if currentDay == lastDay-1 {
+								return date.Format(dateFormat), nil
+							}
 
-			currentDay := date.Day()
-			lastDay := lastDayOfMonth(date)
-
-			for _, allowedDay := range days {
-				switch allowedDay {
-				case -1:
-					if currentDay == lastDay {
-						return date.Format(dateFormat), nil
-					}
-
-				case -2:
-					if currentDay == lastDay-1 {
-						return date.Format(dateFormat), nil
-					}
-
-				default:
-					if currentDay == allowedDay {
-						return date.Format(dateFormat), nil
+						default:
+							if currentDay == allowedDay {
+								return date.Format(dateFormat), nil
+							}
+						}
 					}
 				}
 			}
+
+			date = date.AddDate(0, 0, 1)
 		}
 
 		return "", errors.New("next monthly date not found")
@@ -226,14 +187,54 @@ func nextDayHandler(w http.ResponseWriter, r *http.Request) {
 		now, _ = time.Parse(dateFormat, now.Format(dateFormat))
 	}
 
-	date := r.FormValue("date")
-	repeat := r.FormValue("repeat")
-
-	next, err := NextDate(now, date, repeat)
+	next, err := NextDate(
+		now,
+		r.FormValue("date"),
+		r.FormValue("repeat"),
+	)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	_, _ = w.Write([]byte(next))
+}
+
+func parseInts(value string) ([]int, error) {
+	fields := strings.Split(value, ",")
+	nums := make([]int, 0, len(fields))
+
+	for _, field := range fields {
+		num, err := strconv.Atoi(field)
+		if err != nil {
+			return nil, err
+		}
+
+		nums = append(nums, num)
+	}
+
+	return nums, nil
+}
+
+func contains(nums []int, target int) bool {
+	for _, num := range nums {
+		if num == target {
+			return true
+		}
+	}
+
+	return false
+}
+
+func lastDayOfMonth(date time.Time) int {
+	return time.Date(
+		date.Year(),
+		date.Month()+1,
+		0,
+		0,
+		0,
+		0,
+		0,
+		date.Location(),
+	).Day()
 }
