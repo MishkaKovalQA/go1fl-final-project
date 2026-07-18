@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -96,4 +97,53 @@ func Tasks(search string, limit int) ([]*Task, error) {
 	}
 
 	return tasks, rows.Err()
+}
+
+func GetTask(id string) (*Task, error) {
+	task := &Task{}
+
+	err := db.QueryRow(
+		`SELECT id, date, title, comment, repeat
+		 FROM scheduler
+		 WHERE id = ?`,
+		id,
+	).Scan(
+		&task.ID,
+		&task.Date,
+		&task.Title,
+		&task.Comment,
+		&task.Repeat,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return task, nil
+}
+
+func UpdateTask(task *Task) error {
+	result, err := db.Exec(
+		`UPDATE scheduler
+		 SET date = ?, title = ?, comment = ?, repeat = ?
+		 WHERE id = ?`,
+		task.Date,
+		task.Title,
+		task.Comment,
+		task.Repeat,
+		task.ID,
+	)
+	if err != nil {
+		return err
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if affected == 0 {
+		return errors.New("Задача не найдена")
+	}
+
+	return nil
 }
