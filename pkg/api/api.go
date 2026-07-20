@@ -3,9 +3,13 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 )
 
+var todoPassword string
+
 func Init() {
+	todoPassword = os.Getenv("TODO_PASSWORD")
 	http.HandleFunc("/api/nextdate", nextDayHandler)
 	http.HandleFunc("/api/signin", signinHandler)
 

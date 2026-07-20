@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"net/http"
-	"os"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -49,10 +48,8 @@ func validateToken(tokenString, password string) bool {
 
 func auth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		password := os.Getenv("TODO_PASSWORD")
-
 		// Если пароль не задан — аутентификация отключена.
-		if password == "" {
+		if todoPassword == "" {
 			next(w, r)
 			return
 		}
@@ -64,7 +61,7 @@ func auth(next http.HandlerFunc) http.HandlerFunc {
 			token = cookie.Value
 		}
 
-		if !validateToken(token, password) {
+		if !validateToken(token, todoPassword) {
 			http.Error(w, "Authentication required", http.StatusUnauthorized)
 			return
 		}
@@ -94,14 +91,13 @@ func signinHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	password := os.Getenv("TODO_PASSWORD")
-	if request.Password != password {
+	if request.Password != todoPassword {
 		writeError(w, http.StatusUnauthorized, "Неверный пароль")
 		return
 	}
 
 	claims := jwt.MapClaims{
-		"hash": passwordHash(password),
+		"hash": passwordHash(todoPassword),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
