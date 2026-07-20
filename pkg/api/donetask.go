@@ -9,25 +9,25 @@ import (
 
 func doneTaskHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		writeError(w, "Метод не поддерживается")
+		writeError(w, http.StatusMethodNotAllowed, "Метод не поддерживается")
 		return
 	}
 
 	id := r.FormValue("id")
 	if id == "" {
-		writeError(w, "Не указан идентификатор")
+		writeError(w, http.StatusBadRequest, "Не указан идентификатор")
 		return
 	}
 
 	task, err := db.GetTask(id)
 	if err != nil {
-		writeError(w, "Задача не найдена")
+		writeError(w, http.StatusNotFound, "Задача не найдена")
 		return
 	}
 
 	if task.Repeat == "" {
 		if err := db.DeleteTask(id); err != nil {
-			writeError(w, err.Error())
+			writeError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -41,12 +41,12 @@ func doneTaskHandler(w http.ResponseWriter, r *http.Request) {
 		task.Repeat,
 	)
 	if err != nil {
-		writeError(w, err.Error())
+		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if err := db.UpdateDate(next, id); err != nil {
-		writeError(w, err.Error())
+		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

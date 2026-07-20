@@ -9,12 +9,12 @@ import (
 func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.FormValue("id")
 	if id == "" {
-		writeError(w, "Не указан идентификатор")
+		writeError(w, http.StatusBadRequest, "Не указан идентификатор")
 		return
 	}
 
 	if err := db.DeleteTask(id); err != nil {
-		writeError(w, err.Error())
+		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

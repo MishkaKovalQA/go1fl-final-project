@@ -12,23 +12,23 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 	var task db.Task
 
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
-		writeError(w, "Ошибка десериализации JSON")
+		writeError(w, http.StatusBadRequest, "Ошибка десериализации JSON")
 		return
 	}
 
 	if task.Title == "" {
-		writeError(w, "Не указан заголовок задачи")
+		writeError(w, http.StatusBadRequest, "Не указан заголовок задачи")
 		return
 	}
 
 	if err := checkDate(&task); err != nil {
-		writeError(w, err.Error())
+		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	id, err := db.AddTask(&task)
 	if err != nil {
-		writeError(w, "Не удалось добавить задачу")
+		writeError(w, http.StatusInternalServerError, "Не удалось добавить задачу")
 		return
 	}
 

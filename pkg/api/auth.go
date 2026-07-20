@@ -83,20 +83,20 @@ type signinResponse struct {
 
 func signinHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		writeError(w, "Метод не поддерживается")
+		writeError(w, http.StatusMethodNotAllowed, "Метод не поддерживается")
 		return
 	}
 
 	var request signinRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		writeError(w, "Ошибка десериализации JSON")
+		writeError(w, http.StatusBadRequest, "Ошибка десериализации JSON")
 		return
 	}
 
 	password := os.Getenv("TODO_PASSWORD")
 	if request.Password != password {
-		writeError(w, "Неверный пароль")
+		writeError(w, http.StatusUnauthorized, "Неверный пароль")
 		return
 	}
 
@@ -108,7 +108,7 @@ func signinHandler(w http.ResponseWriter, r *http.Request) {
 
 	signedToken, err := token.SignedString([]byte(secretKey))
 	if err != nil {
-		writeError(w, "Не удалось создать токен")
+		writeError(w, http.StatusInternalServerError, "Не удалось создать токен")
 		return
 	}
 
