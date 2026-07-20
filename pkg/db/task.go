@@ -146,7 +146,7 @@ func UpdateTask(task *Task) error {
 	}
 
 	if affected == 0 {
-		return errors.New("Задача не найдена")
+		return errors.New("task not found")
 	}
 
 	return nil
@@ -167,7 +167,7 @@ func DeleteTask(id string) error {
 	}
 
 	if affected == 0 {
-		return errors.New("Задача не найдена")
+		return errors.New("task not found")
 	}
 
 	return nil
@@ -189,7 +189,7 @@ func UpdateDate(next, id string) error {
 	}
 
 	if affected == 0 {
-		return errors.New("Задача не найдена")
+		return errors.New("task not found")
 	}
 
 	return nil
