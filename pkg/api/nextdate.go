@@ -16,23 +16,23 @@ const (
 
 func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 	if repeat == "" {
-		return "", errors.New("Не указано правило повторения")
+		return "", errors.New("не указано правило повторения")
 	}
 
 	date, err := time.Parse(dateFormat, dstart)
 	if err != nil {
-		return "", errors.New("Неверный формат даты")
+		return "", errors.New("неверный формат даты")
 	}
 
 	parts := strings.Fields(repeat)
 	if len(parts) == 0 {
-		return "", errors.New("Не указано правило повторения")
+		return "", errors.New("не указано правило повторения")
 	}
 
 	switch parts[0] {
 	case "y":
 		if len(parts) != 1 {
-			return "", errors.New("Неверное правило повторения по годам")
+			return "", errors.New("неверное правило повторения по годам")
 		}
 
 		for {
@@ -45,20 +45,20 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 
 	case "d":
 		if len(parts) != 2 {
-			return "", errors.New("Неверное правило повторения по дням")
+			return "", errors.New("неверное правило повторения по дням")
 		}
 
 		days, err := strconv.Atoi(parts[1])
 		if err != nil {
 			return "", fmt.Errorf(
-				"Некорректный интервал дней %q: %w",
+				"некорректный интервал дней %q: %w",
 				parts[1],
 				err,
 			)
 		}
 
 		if days < 1 || days > 400 {
-			return "", errors.New("Интервал дней должен быть от 1 до 400")
+			return "", errors.New("интервал дней должен быть от 1 до 400")
 		}
 
 		for {
@@ -71,7 +71,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 
 	case "w":
 		if len(parts) != 2 {
-			return "", errors.New("Неверное правило повторения по неделям")
+			return "", errors.New("неверное правило повторения по неделям")
 		}
 
 		weekdays, err := parseInts(parts[1])
@@ -81,7 +81,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 
 		for _, weekday := range weekdays {
 			if weekday < 1 || weekday > 7 {
-				return "", errors.New("День недели должен быть от 1 до 7")
+				return "", errors.New("день недели должен быть от 1 до 7")
 			}
 		}
 
@@ -103,12 +103,12 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		}
 
 		return "", errors.New(
-			"Не удалось найти следующую дату по недельному правилу",
+			"не удалось найти следующую дату по недельному правилу",
 		)
 
 	case "m":
 		if len(parts) < 2 || len(parts) > 3 {
-			return "", errors.New("Неверное правило повторения по месяцам")
+			return "", errors.New("неверное правило повторения по месяцам")
 		}
 
 		days, err := parseInts(parts[1])
@@ -118,7 +118,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 
 		for _, day := range days {
 			if day < -2 || day == 0 || day > 31 {
-				return "", errors.New("Неверный день месяца")
+				return "", errors.New("неверный день месяца")
 			}
 		}
 
@@ -132,7 +132,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 
 			for _, month := range months {
 				if month < 1 || month > 12 {
-					return "", errors.New("Месяц должен быть от 1 до 12")
+					return "", errors.New("месяц должен быть от 1 до 12")
 				}
 			}
 		}
@@ -172,11 +172,11 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		}
 
 		return "", errors.New(
-			"Не удалось найти следующую дату по месячному правилу",
+			"не удалось найти следующую дату по месячному правилу",
 		)
 
 	default:
-		return "", errors.New("Неподдерживаемое правило повторения")
+		return "", errors.New("неподдерживаемое правило повторения")
 	}
 }
 
@@ -189,7 +189,7 @@ func nextDayHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			http.Error(
 				w,
-				"Параметр now должен быть в формате ГГГГММДД",
+				"параметр now должен быть в формате ГГГГММДД",
 				http.StatusBadRequest,
 			)
 			return
@@ -221,7 +221,7 @@ func parseInts(value string) ([]int, error) {
 		num, err := strconv.Atoi(field)
 		if err != nil {
 			return nil, fmt.Errorf(
-				"Некорректное число %q: %w",
+				"некорректное число %q: %w",
 				field,
 				err,
 			)

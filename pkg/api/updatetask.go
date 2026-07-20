@@ -11,17 +11,17 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	var task db.Task
 
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
-		writeError(w, http.StatusBadRequest, "Ошибка десериализации JSON")
+		writeError(w, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 
 	if task.ID == "" {
-		writeError(w, http.StatusBadRequest, "Не указан идентификатор")
+		writeError(w, http.StatusBadRequest, "не указан идентификатор")
 		return
 	}
 
 	if task.Title == "" {
-		writeError(w, http.StatusBadRequest, "Не указан заголовок задачи")
+		writeError(w, http.StatusBadRequest, "не указан заголовок задачи")
 		return
 	}
 

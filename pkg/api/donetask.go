@@ -9,19 +9,19 @@ import (
 
 func doneTaskHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		writeError(w, http.StatusMethodNotAllowed, "Метод не поддерживается")
+		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
 		return
 	}
 
 	id := r.FormValue("id")
 	if id == "" {
-		writeError(w, http.StatusBadRequest, "Не указан идентификатор")
+		writeError(w, http.StatusBadRequest, "не указан идентификатор")
 		return
 	}
 
 	task, err := db.GetTask(id)
 	if err != nil {
-		writeError(w, http.StatusNotFound, "Задача не найдена")
+		writeError(w, http.StatusNotFound, "задача не найдена")
 		return
 	}
 

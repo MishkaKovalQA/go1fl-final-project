@@ -11,18 +11,18 @@ import (
 func getTaskHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.FormValue("id")
 	if id == "" {
-		writeError(w, http.StatusBadRequest, "Не указан идентификатор")
+		writeError(w, http.StatusBadRequest, "не указан идентификатор")
 		return
 	}
 
 	task, err := db.GetTask(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			writeError(w, http.StatusNotFound, "Задача не найдена")
+			writeError(w, http.StatusNotFound, "задача не найдена")
 			return
 		}
 
-		writeError(w, http.StatusInternalServerError, "Не удалось получить задачу")
+		writeError(w, http.StatusInternalServerError, "не удалось получить задачу")
 		return
 	}
 

@@ -23,7 +23,7 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 		deleteTaskHandler(w, r)
 
 	default:
-		writeError(w, http.StatusMethodNotAllowed, "Метод не поддерживается")
+		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
 	}
 }
 
@@ -37,7 +37,7 @@ func checkDate(task *db.Task) error {
 
 	date, err := time.Parse(dateFormat, task.Date)
 	if err != nil {
-		return errors.New("Неверный формат даты")
+		return errors.New("неверный формат даты")
 	}
 
 	var next string

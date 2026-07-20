@@ -14,7 +14,7 @@ type TasksResp struct {
 
 func tasksHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		writeError(w, http.StatusMethodNotAllowed, "Метод не поддерживается")
+		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
 		return
 	}
 
@@ -22,7 +22,7 @@ func tasksHandler(w http.ResponseWriter, r *http.Request) {
 
 	tasks, err := db.Tasks(search, tasksLimit)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Не удалось получить список задач")
+		writeError(w, http.StatusInternalServerError, "не удалось получить список задач")
 		return
 	}
 
