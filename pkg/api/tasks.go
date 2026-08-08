@@ -1,0 +1,32 @@
+package api
+
+import (
+	"net/http"
+
+	"go1fl-final-project/pkg/db"
+)
+
+const tasksLimit = 50
+
+type TasksResp struct {
+	Tasks []*db.Task `json:"tasks"`
+}
+
+func tasksHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+
+	search := r.FormValue("search")
+
+	tasks, err := db.Tasks(search, tasksLimit)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "не удалось получить список задач")
+		return
+	}
+
+	writeJSON(w, TasksResp{
+		Tasks: tasks,
+	})
+}

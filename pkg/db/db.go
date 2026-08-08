@@ -1,0 +1,62 @@
+package db
+
+import (
+	"database/sql"
+	"errors"
+	"os"
+
+	_ "modernc.org/sqlite"
+)
+
+const schema = `
+CREATE TABLE IF NOT EXISTS scheduler (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	date CHAR(8) NOT NULL DEFAULT '',
+	title VARCHAR NOT NULL DEFAULT '',
+	comment TEXT NOT NULL DEFAULT '',
+	repeat VARCHAR NOT NULL DEFAULT ''
+);
+
+CREATE INDEX IF NOT EXISTS scheduler_date ON scheduler(date);
+`
+
+var db *sql.DB
+
+func Init(dbFile string) error {
+	install := false
+
+	if _, err := os.Stat(dbFile); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			install = true
+		} else {
+			return err
+		}
+	}
+
+	var err error
+	db, err = sql.Open("sqlite", dbFile)
+	if err != nil {
+		return err
+	}
+
+	if install {
+		if _, err = db.Exec(schema); err != nil {
+			_ = db.Close()
+			db = nil
+			return err
+		}
+	}
+
+	return nil
+}
+
+func DB() *sql.DB {
+	return db
+}
+
+func Close() error {
+	if db == nil {
+		return nil
+	}
+	return db.Close()
+}
